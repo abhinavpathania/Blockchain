@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Degree Verification</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <style>
+    :root {
+      --primary-blue: #4a89dc;
+      --dark-blue: #3b7dd8;
+      --accent-orange: #ff7e5f;
+      --light-gray: #f5f7fa;
+      --dark-gray: #656565;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 50%, #80deea 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      margin-top: 40px;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      font-weight: 800;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      letter-spacing: -0.5px;
+    }
+
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(74, 137, 220, 0.2);
+    }
+
+    button {
+      background: var(--primary-blue);
+      color: white;
+      padding: 12px;
+      border: none;
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--dark-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 125, 216, 0.3);
+    }
+
+    .message {
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .degree-details {
+      margin-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 20px;
+      display: none;
+    }
+
+    .loading {
+      text-align: center;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary-blue);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 2s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #qr-preview {
+      max-width: 100%;
+      max-height: 200px;
+      margin: 15px auto;
+      display: none;
+      border: 15px solid white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .network-config {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #e9f7fe;
+      border-radius: 8px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .status-connected {
+      background-color: #4CAF50;
+    }
+
+    .status-disconnected {
+      background-color: #f44336;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--dark-gray);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Verify Degree</h1>
+    
+    <div class="network-config">
+      <p><span id="connectionStatus" class="status-indicator status-disconnected"></span> 
+         <span id="connectionText">Disconnected</span></p>
+      
+      <div id="activeAccount" style="margin-top: 10px; font-size: 14px; display: none;">
+        <strong>Active Account: </strong><span id="accountAddress">Not connected</span>
+        <div id="accountStatus"></div>
+      </div>
+      
+      <button id="connectBtn">Connect to Blockchain</button>
+    </div>
+
+    <label for="uploadQR">Upload QR Code Image:</label>
+    <input type="file" id="uploadQR" accept="image/*">
+    <img id="qr-preview" src="#" alt="QR Code Preview">
+
+    <div class="loading" id="loadingIndicator">
+      <div class="spinner"></div>
+      <p>Processing QR Code...</p>
+    </div>
+
+    <div class="message success" id="successMessage"></div>
+    <div class="message error" id="errorMessage"></div>
+
+    <div class="degree-details" id="degreeInfo">
+      <h3>Degree Details</h3>
+      <p><strong>First Name:</strong> <span id="firstName"></span></p>
+      <p><strong>Last Name:</strong> <span id="lastName"></span></p>
+      <p><strong>Roll Number:</strong> <span id="rollNumber"></span></p>
+      <p><strong>Course:</strong> <span id="course"></span></p>
+      <p><strong>Graduation Year:</strong> <span id="graduationYear"></span></p>
+      <p><strong>GPA:</strong> <span id="gpa"></span></p>
+    </div>
+  </div>
+
+  <!-- Hidden div for QR scanner -->
+  <div id="qr-reader" style="display: none;"></div>
+
+  <script>
+    // Hardcoded configuration
+    const CONFIG = {
+      ganacheUrl: "http://127.0.0.1:7545",
+      contractAddress: "0x28253478f0FEc9CA8357FC7F1647E0D2f16F06Ba",
+      contractABI: [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "degreeHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "firstName",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "lastName",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "rollNumber",
+              "type": "string"
+            }
+          ],
+          "name": "DegreeAdded",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "verifier",
+              "type": "address"
+            }
+          ],
+          "name": "VerifierAdded",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "verifier",
+              "type": "address"
+            }
+          ],
+          "name": "VerifierRemoved",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "admin",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "verifiers",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_addr",
+              "type": "address"
+            }
+          ],
+          "name": "isAddressAdmin",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_verifier",
+              "type": "address"
+            }
+          ],
+          "name": "addVerifier",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_verifier",
+              "type": "address"
+            }
+          ],
+          "name": "removeVerifier",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_firstName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_lastName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_rollNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_gender",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_course",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_email",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_year",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_graduationYear",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_gpa",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_hexCode",
+              "type": "bytes32"
+            }
+          ],
+          "name": "addDegree",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "_hexCode",
+              "type": "bytes32"
+            }
+          ],
+          "name": "verifyDegree",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "firstName",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "lastName",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "rollNumber",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "gender",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "course",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "email",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "year",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "graduationYear",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "gpa",
+                  "type": "string"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "exists",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct DegreeVerification.Degree",
+              "name": "",
+              "type": "tuple"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        }
+      ]
+    };
+
+    let web3;
+    let contract;
+    let connectionStatus = false;
+
+    function updateConnectionStatus(isConnected, message = null) {
+      const statusIndicator = document.getElementById("connectionStatus");
+      const statusText = document.getElementById("connectionText");
+      
+      connectionStatus = isConnected;
+      
+      if (isConnected) {
+        statusIndicator.classList.remove("status-disconnected");
+        statusIndicator.classList.add("status-connected");
+        statusText.textContent = message || "Connected to Blockchain";
+      } else {
+        statusIndicator.classList.remove("status-connected");
+        statusIndicator.classList.add("status-disconnected");
+        statusText.textContent = message || "Disconnected";
+      }
+    }
+
+    async function connectToBlockchain() {
+      try {
+        showLoading(true);
+        
+        // Clear previous messages
+        document.getElementById("successMessage").style.display = "none";
+        document.getElementById("errorMessage").style.display = "none";
+        document.getElementById("activeAccount").style.display = "none";
+        
+        console.log("Connecting to Ganache at:", CONFIG.ganacheUrl);
+        console.log("Contract address:", CONFIG.contractAddress);
+        
+        // Initialize Web3 with Ganache provider
+        web3 = new Web3(new Web3.providers.HttpProvider(CONFIG.ganacheUrl));
+        
+        // Check connection
+        try {
+          const isListening = await web3.eth.net.isListening();
+          if (!isListening) {
+            throw new Error("Cannot connect to Blockchain");
+          }
+          
+          // Get accounts
+          const accounts = await web3.eth.getAccounts();
+          if (!accounts || accounts.length === 0) {
+            throw new Error("No accounts available");
+          }
+          
+          const currentAccount = accounts[0];
+          document.getElementById("accountAddress").textContent = currentAccount;
+          document.getElementById("activeAccount").style.display = "block";
+          
+          // Get network info
+          const networkId = await web3.eth.net.getId();
+          console.log("Connected to network ID:", networkId);
+          
+          // Initialize contract
+          contract = new web3.eth.Contract(CONFIG.contractABI, CONFIG.contractAddress);
+          
+          // Test contract connection by calling a view function
+          try {
+            const admin = await contract.methods.admin().call();
+            console.log("Contract connection successful. Admin address:", admin);
+            
+            // Check if current account is admin
+            const isAdmin = await contract.methods.isAddressAdmin(currentAccount).call();
+            
+            // Check if current account is verifier
+            const isVerifier = await contract.methods.verifiers(currentAccount).call();
+            
+            let accountStatusHTML = "";
+            
+            if (isAdmin) {
+              accountStatusHTML += "<span style='color: #dc3545;'>✓ Admin</span> ";
+            }
+            
+            if (isVerifier) {
+              accountStatusHTML += "<span style='color: #28a745;'>✓ Verifier</span>";
+            }
+            
+            if (!isAdmin && !isVerifier) {
+              accountStatusHTML = "<span style='color: #ffc107;'>⚠ No verification privileges</span>";
+            }
+            
+            document.getElementById("accountStatus").innerHTML = accountStatusHTML;
+            
+            updateConnectionStatus(true, `Connected to Blockchain (Network ID: ${networkId})`);
+            showSuccess("Successfully connected to blockchain and smart contract");
+          } catch (contractErr) {
+            console.error("Contract method call failed:", contractErr);
+            updateConnectionStatus(false);
+            showError("Connected to blockchain but contract not found.");
+          }
+        } catch (err) {
+          console.error("Connection error:", err);
+          updateConnectionStatus(false);
+          showError("Failed to connect to blockchain. Make sure Ganache is running.");
+        }
+      } catch (err) {
+        console.error("Connection setup error:", err);
+        updateConnectionStatus(false);
+        showError("Connection error: " + (err.message || "Unknown error"));
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function isValidHash(hash) {
+      return /^0x([A-Fa-f0-9]{64})$/.test(hash);
+    }
+
+    function extractHashFromText(text) {
+      // Try to extract an Ethereum hash from any text
+      const hashMatch = text.match(/0x[A-Fa-f0-9]{64}/);
+      return hashMatch ? hashMatch[0] : null;
+    }
+
+    function showLoading(isLoading) {
+      document.getElementById("loadingIndicator").style.display = isLoading ? "block" : "none";
+    }
+
+    function showSuccess(message) {
+      const successDiv = document.getElementById("successMessage");
+      successDiv.textContent = message;
+      successDiv.style.display = "block";
+      document.getElementById("errorMessage").style.display = "none";
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById("errorMessage");
+      errorDiv.textContent = message;
+      errorDiv.style.display = "block";
+      document.getElementById("successMessage").style.display = "none";
+      document.getElementById("degreeInfo").style.display = "none";
+    }
+
+    async function verifyDegree(hash) {
+      if (!connectionStatus) {
+        showError("Please connect to blockchain first");
+        return;
+      }
+      
+      showLoading(true);
+      document.getElementById("degreeInfo").style.display = "none";
+      document.getElementById("successMessage").style.display = "none";
+      document.getElementById("errorMessage").style.display = "none";
+      
+      try {
+        console.log("Verifying hash:", hash);
+        
+        // Ensure the hash is a bytes32 format
+        let formattedHash = hash;
+        if (!hash.startsWith('0x')) {
+          formattedHash = '0x' + hash;
+        }
+        
+        // Check hash length
+        if (formattedHash.length !== 66) {
+          showError("Invalid hash length. Expected 66 characters (including 0x prefix).");
+          showLoading(false);
+          return;
+        }
+        
+        // Log all details for debugging
+        console.log("Calling contract.methods.verifyDegree with hash:", formattedHash);
+        
+        try {
+          // Get accounts from web3 to use one as the caller
+          const accounts = await web3.eth.getAccounts();
+          if (!accounts || accounts.length === 0) {
+            throw new Error("No accounts available");
+          }
+          
+          // Use the first account as the caller and add it as the "from" address
+          const fromAddress = accounts[0];
+          console.log("Using address for verification:", fromAddress);
+          
+          const result = await contract.methods.verifyDegree(formattedHash).call({from: fromAddress});
+          console.log("Verification result:", result);
+          
+          const [valid, degree] = [result[0], result[1]];
+          
+          if (valid && degree.exists) {
+            document.getElementById("firstName").textContent = degree.firstName;
+            document.getElementById("lastName").textContent = degree.lastName;
+            document.getElementById("rollNumber").textContent = degree.rollNumber;
+            document.getElementById("course").textContent = degree.course;
+            document.getElementById("graduationYear").textContent = degree.graduationYear;
+            document.getElementById("gpa").textContent = degree.gpa;
+            document.getElementById("degreeInfo").style.display = "block";
+            showSuccess("Degree verified successfully!");
+          } else {
+            showError("Degree not found or invalid. This hash doesn't match any registered degree.");
+            console.log("Degree verification failed. Valid:", valid, "Exists:", degree ? degree.exists : "undefined");
+          }
+        } catch (contractErr) {
+          console.error("Contract call error:", contractErr);
+          showError("Error verifying degree: " + (contractErr.message || "Unknown contract error"));
+        }
+      } catch (err) {
+        console.error("Verification error:", err);
+        showError("Error verifying degree: " + (err.message || "Unknown error"));
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    document.getElementById("connectBtn").addEventListener("click", connectToBlockchain);
+
+    document.getElementById("uploadQR").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // Show image preview
+      const qrPreview = document.getElementById("qr-preview");
+      const fileReader = new FileReader();
+      
+      showLoading(true);
+      
+      // Create an Image element to hold the uploaded image
+      const img = new Image();
+      
+      // Set up the processing once the image is loaded
+      img.onload = function() {
+        try {
+          // Draw the image onto a canvas for processing
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set canvas size to match the image
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          // Draw the image on the canvas
+          ctx.drawImage(img, 0, 0);
+          
+          // Get image data for QR code detection
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          
+          // Try to detect QR code using jsQR
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
+          
+          if (code) {
+            console.log("QR Code detected:", code.data);
+            
+            // Extract hash if it's embedded in text
+            const hash = extractHashFromText(code.data) || code.data;
+            
+            if (isValidHash(hash)) {
+              if (connectionStatus) {
+                verifyDegree(hash);
+              } else {
+                showError("Hash found in QR code. Please connect to blockchain first to verify.");
+                showLoading(false);
+              }
+            } else {
+              console.log("Invalid hash format in QR code:", code.data);
+              showError("QR code does not contain a valid degree hash");
+              showLoading(false);
+            }
+          } else {
+            console.log("No QR code found in image");
+            
+            // Try with the original html5-qrcode library as fallback
+            const qrScanner = new Html5Qrcode("qr-reader");
+            
+            qrScanner.scanFile(file, true)
+              .then(result => {
+                console.log("Fallback scan successful:", result);
+                const hash = extractHashFromText(result) || result;
+                
+                if (isValidHash(hash)) {
+                  if (connectionStatus) {
+                    verifyDegree(hash);
+                  } else {
+                    showError("Hash found in QR code. Please connect to blockchain first to verify.");
+                  }
+                } else {
+                  showError("QR code does not contain a valid degree hash");
+                }
+              })
+              .catch(err => {
+                console.error("Fallback scan also failed:", err);
+                showError("Failed to read QR code. Please ensure the image contains a valid QR code.");
+                showLoading(false);
+              });
+          }
+        } catch (err) {
+          console.error("Error processing QR image:", err);
+          showError("Error processing image: " + (err.message || "Unknown error"));
+          showLoading(false);
+        }
+      };
+      
+      // Handle image load errors
+      img.onerror = function() {
+        console.error("Failed to load image");
+        showError("Failed to load image. Please try another file.");
+        showLoading(false);
+      };
+      
+      // Set up the image preview and load the image
+      fileReader.onload = function(e) {
+        qrPreview.src = e.target.result;
+        qrPreview.style.display = "block";
+        
+        // Set the image source to the file data
+        img.src = e.target.result;
+      };
+      
+      fileReader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>

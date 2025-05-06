@@ -1,0 +1,290 @@
+const contract = await AdminWhitelist.deployed();
+
+// Add an admin (use one of Ganache's accounts)
+await contract.addAdmin("0x742d35Cc6634C0532925a3b844Bc454e4438f44e");
+
+// Check if an address is admin
+const isAdmin = await contract.isAdmin("0x742d35Cc6634C0532925a3b844Bc454e4438f44e");
+console.log(isAdmin); // Should return `true`
+
+
+const contractAddress = "0xF4c4eFEE237802c54ea1Ef11008A15C0035A7857";
+[
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "degreeHash",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "firstName",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "lastName",
+              "type": "string"
+            },
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "rollNumber",
+              "type": "string"
+            }
+          ],
+          "name": "DegreeAdded",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "verifier",
+              "type": "address"
+            }
+          ],
+          "name": "VerifierAdded",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "verifier",
+              "type": "address"
+            }
+          ],
+          "name": "VerifierRemoved",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "admin",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "name": "verifiers",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_addr",
+              "type": "address"
+            }
+          ],
+          "name": "isAddressAdmin",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_verifier",
+              "type": "address"
+            }
+          ],
+          "name": "addVerifier",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_verifier",
+              "type": "address"
+            }
+          ],
+          "name": "removeVerifier",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "string",
+              "name": "_firstName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_lastName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_rollNumber",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_gender",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_course",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_email",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_year",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_graduationYear",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "_gpa",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "_hexCode",
+              "type": "bytes32"
+            }
+          ],
+          "name": "addDegree",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "_hexCode",
+              "type": "bytes32"
+            }
+          ],
+          "name": "verifyDegree",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "firstName",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "lastName",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "rollNumber",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "gender",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "course",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "email",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "year",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "graduationYear",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "gpa",
+                  "type": "string"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "exists",
+                  "type": "bool"
+                }
+              ],
+              "internalType": "struct DegreeVerification.Degree",
+              "name": "",
+              "type": "tuple"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function",
+          "constant": true
+        }
+      ];

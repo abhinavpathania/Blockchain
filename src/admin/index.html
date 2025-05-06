@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Degree to Blockchain</title>
+  <script src="https://cdn.jsdelivr.net/npm/js-sha3@0.8.0/dist/sha3.min.js"></script>
+  <style>
+    :root {
+      --primary-blue: #4a89dc;
+      --dark-blue: #3b7dd8;
+      --accent-orange: #ff7e5f;
+      --light-gray: #f5f7fa;
+      --dark-gray: #656565;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 50%, #80deea 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-weight: 800;
+      font-size: 2.5rem;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      letter-spacing: -0.5px;
+    }
+
+    .content-wrapper {
+      display: flex;
+      gap: 3rem;
+      align-items: flex-start;
+    }
+
+    .form-container {
+      flex: 1;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--dark-gray);
+      font-size: 0.9rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(74, 137, 220, 0.2);
+    }
+
+    input::placeholder {
+      color: #b0b0b0;
+    }
+
+    .submit-btn {
+      background: var(--accent-orange);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .submit-btn:hover {
+      background: #ff6a45;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 126, 95, 0.3);
+    }
+
+    .qr-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      min-height: 400px;
+    }
+
+    .qr-placeholder {
+      width: 250px;
+      height: 250px;
+      background: #f5f7fa;
+      border: 1px dashed #d0d0d0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b0b0b0;
+      font-weight: 500;
+    }
+
+    .qr-code {
+      width: 250px;
+      height: 250px;
+      border: 15px solid white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .qr-title {
+      margin-top: 1.5rem;
+      font-weight: 600;
+      color: var(--dark-gray);
+      text-align: center;
+    }
+
+    .hash-display {
+      margin-top: 1rem;
+      word-break: break-word;
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: #f5f5f5;
+      padding: 0.5rem;
+      border-radius: 4px;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .content-wrapper {
+        flex-direction: column;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ADD DEGREE TO BLOCKCHAIN</h1>
+    </header>
+
+    <div class="content-wrapper">
+      <div class="form-container">
+        <form id="degreeForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="firstName">First Name</label>
+              <input type="text" name="firstName" id="firstName" placeholder="Enter your first name" required />
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">Last Name</label>
+              <input type="text" name="lastName" id="lastName" placeholder="Enter your last name" required />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="rollNumber">Roll Number</label>
+              <input type="text" name="rollNumber" id="rollNumber" placeholder="Enter your roll number" required />
+            </div>
+
+            <div class="form-group">
+              <label for="gender">Gender</label>
+              <select name="gender" id="gender" required>
+                <option value="" disabled selected>Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="course">Course</label>
+              <input type="text" name="course" id="course" placeholder="Enter your course" required />
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" name="email" id="email" placeholder="Enter your email" required />
+            </div>
+
+            <div class="form-group">
+              <label for="year">Year</label>
+              <input type="number" name="year" id="year" placeholder="Enter current year" min="1" max="5" required />
+            </div>
+
+            <div class="form-group">
+              <label for="gradYear">Graduation Year</label>
+              <input type="number" name="gradYear" id="gradYear" placeholder="Enter graduation year" required />
+            </div>
+
+            <div class="form-group">
+              <label for="gpa">GPA</label>
+              <input type="number" name="gpa" id="gpa" placeholder="Enter your GPA" step="0.01" min="0" max="4" required />
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">Generate Blockchain QR</button>
+        </form>
+      </div>
+
+      <div class="qr-container">
+        <div class="qr-placeholder" id="qrPlaceholder">QR Code will appear here</div>
+        <img src="" alt="QR Code" class="qr-code" id="qrCode" />
+        <div class="hash-display" id="hashDisplay"></div>
+        <p class="qr-title">Blockchain Degree Verification</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-sha3@0.8.0/build/sha3.min.js"></script>
+
+  <script>
+    document.getElementById("degreeForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const data = {
+        firstName: document.getElementById("firstName").value.trim(),
+        lastName: document.getElementById("lastName").value.trim(),
+        rollNumber: document.getElementById("rollNumber").value.trim(),
+        gender: document.getElementById("gender").value,
+        course: document.getElementById("course").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        year: document.getElementById("year").value.trim(),
+        gradYear: document.getElementById("gradYear").value.trim(),
+        gpa: document.getElementById("gpa").value.trim()
+      };
+
+      try {
+        const jsonString = JSON.stringify(data);
+        const hash = sha3_256(jsonString);
+        const fullHash = "0x" + hash;
+
+        // Display hash
+        const hashDisplay = document.getElementById("hashDisplay");
+        hashDisplay.style.display = "block";
+        hashDisplay.textContent = `Keccak256 Hash: ${fullHash}`;
+
+        // Generate QR
+        const qrCode = document.getElementById("qrCode");
+        const qrPlaceholder = document.getElementById("qrPlaceholder");
+        qrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${fullHash}`;
+        qrCode.style.display = "block";
+        qrPlaceholder.style.display = "none";
+
+      } catch (err) {
+        console.error("Error generating hash or QR:", err);
+        alert("Something went wrong!");
+      }
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+<script>
+  let contract;
+  let account;
+
+  const contractAddress = "0x28253478f0FEc9CA8357FC7F1647E0D2f16F06Ba";
+  const abi = [
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "degreeHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "firstName",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "lastName",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "rollNumber",
+        "type": "string"
+      }
+    ],
+    "name": "DegreeAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "verifier",
+        "type": "address"
+      }
+    ],
+    "name": "VerifierAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "verifier",
+        "type": "address"
+      }
+    ],
+    "name": "VerifierRemoved",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "admin",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "verifiers",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_addr",
+        "type": "address"
+      }
+    ],
+    "name": "isAddressAdmin",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_verifier",
+        "type": "address"
+      }
+    ],
+    "name": "addVerifier",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_verifier",
+        "type": "address"
+      }
+    ],
+    "name": "removeVerifier",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_firstName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_lastName",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_rollNumber",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_gender",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_course",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_email",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_year",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_graduationYear",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_gpa",
+        "type": "string"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_hexCode",
+        "type": "bytes32"
+      }
+    ],
+    "name": "addDegree",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_hexCode",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verifyDegree",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "firstName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "lastName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "rollNumber",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "gender",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "course",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "email",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "year",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "graduationYear",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "gpa",
+            "type": "string"
+          },
+          {
+            "internalType": "bool",
+            "name": "exists",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct DegreeVerification.Degree",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true
+  }
+];
+
+  window.addEventListener("load", async () => {
+    if (window.ethereum) {
+      window.web3 = new Web3(ethereum);
+      await ethereum.request({ method: "eth_requestAccounts" });
+      const accounts = await web3.eth.getAccounts();
+      account = accounts[0];
+
+      contract = new web3.eth.Contract(abi, contractAddress);
+    } else {
+      alert("Please install MetaMask to interact with the blockchain.");
+    }
+  });
+
+  document.getElementById("degreeForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const data = {
+      firstName: document.getElementById("firstName").value.trim(),
+      lastName: document.getElementById("lastName").value.trim(),
+      rollNumber: document.getElementById("rollNumber").value.trim(),
+      gender: document.getElementById("gender").value,
+      course: document.getElementById("course").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      year: document.getElementById("year").value.trim(),
+      gradYear: document.getElementById("gradYear").value.trim(),
+      gpa: document.getElementById("gpa").value.trim()
+    };
+
+    try {
+      const jsonString = JSON.stringify(data);
+      const hash = sha3_256(jsonString);
+      const fullHash = "0x" + hash;
+
+      // Display hash
+      document.getElementById("hashDisplay").style.display = "block";
+      document.getElementById("hashDisplay").textContent = `Keccak256 Hash: ${fullHash}`;
+
+      // Generate QR
+      const qrCode = document.getElementById("qrCode");
+      qrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${fullHash}`;
+      qrCode.style.display = "block";
+      document.getElementById("qrPlaceholder").style.display = "none";
+
+      // Send to blockchain
+      await contract.methods
+        .addDegree(
+          data.firstName,
+          data.lastName,
+          data.rollNumber,
+          data.gender,
+          data.course,
+          data.email,
+          data.year,
+          data.gradYear,
+          data.gpa,
+          fullHash
+        )
+        .send({ from: account });
+
+      alert("Degree added to blockchain!");
+
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Transaction failed or rejected.");
+    }
+  });
+</script>
+
+</body>
+</html>
