@@ -1,6 +1,6 @@
 # 🎓 Degree Verification System using Blockchain
 
-A decentralized web application (DApp) for secure and tamper-proof academic degree verification using the Ethereum blockchain.
+A decentralized website for secure and tamper-proof academic degree verification using the Ethereum blockchain.
 
 ---
 
